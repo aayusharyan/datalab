@@ -157,11 +157,19 @@ def connection_flags(parser):
         action='store_true',
         default=False,
         help='do not open a browser connected to Datalab')
+    parser.add_argument(
+        '--beta-internal-ip',
+        dest='internal_ip',
+        action='store_true',
+        default=False,
+        help=('connect to the internal IP address of the instance.'
+              '\n\n'
+              'Note that this is a beta feature and unsupported.'))
 
     return
 
 
-def connect(args, gcloud_compute, email, in_cloud_shell):
+def connect(args, gcloud_compute, email, in_cloud_shell, beta_compute):
     """Create a persistent connection to a Datalab instance.
 
     Args:
@@ -170,6 +178,7 @@ def connect(args, gcloud_compute, email, in_cloud_shell):
       email: The user's email address
       in_cloud_shell: Whether or not the command is being run in the
         Google Cloud Shell
+      beta_compute: A function that can be called to invoke `gcloud beta compute`
     """
     instance = args.instance
     connect_msg = ('Connecting to {0}.\n'
@@ -214,7 +223,11 @@ def connect(args, gcloud_compute, email, in_cloud_shell):
             '--ssh-flag=-L',
             '--ssh-flag=' + port_mapping])
         cmd.append('datalab@{0}'.format(instance))
-        gcloud_compute(args, cmd)
+        if args.internal_ip:
+          cmd.extend(['--internal-ip'])
+          beta_compute(args, cmd)
+        else:
+          gcloud_compute(args, cmd)
         return
 
     def maybe_open_browser(address):
@@ -353,7 +366,8 @@ def maybe_start(args, gcloud_compute, instance, status):
     return
 
 
-def run(args, gcloud_compute, email='', in_cloud_shell=False, **unused_kwargs):
+def run(args, gcloud_compute, email='', in_cloud_shell=False,
+        beta_compute=None, **unused_kwargs):
     """Implementation of the `datalab connect` subcommand.
 
     Args:
@@ -362,6 +376,7 @@ def run(args, gcloud_compute, email='', in_cloud_shell=False, **unused_kwargs):
       email: The user's email address
       in_cloud_shell: Whether or not the command is being run in the
         Google Cloud Shell
+      beta_compute: Function that can be used to invoke `gcloud beta compute`
     Raises:
       subprocess.CalledProcessError: If a nested `gcloud` calls fails
     """
@@ -384,5 +399,5 @@ def run(args, gcloud_compute, email='', in_cloud_shell=False, **unused_kwargs):
                   instance, sdk_version, datalab_version))
 
     maybe_start(args, gcloud_compute, instance, status)
-    connect(args, gcloud_compute, email, in_cloud_shell)
+    connect(args, gcloud_compute, email, in_cloud_shell, beta_compute)
     return

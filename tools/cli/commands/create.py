@@ -485,6 +485,23 @@ def flags(parser):
         help='do not automatically backup the disk contents to GCS')
 
     parser.add_argument(
+        '--beta-no-external-ip',
+        dest='no_external_ip',
+        action='store_true',
+        default=False,
+        help=(
+            'do not assign the instance an external IP address.'
+            '\n\n'
+            'If specified, you must make sure that the machine where you '
+            'run `datalab connect` is on the same VPC as the instance '
+            '(the one specified via the `--network-name` flag).'
+            '\n\n'
+            'Additionally, you must pass the `--beta-internal-ip` flag '
+            'to the `datalab connect` command.'
+            '\n\n'
+            'Note that this is a beta feature and unsupported.'))
+
+    parser.add_argument(
         '--no-create-repository',
         dest='no_create_repository',
         action='store_true',
@@ -778,7 +795,8 @@ def prepare(args, gcloud_compute, gcloud_repos):
 
 def run(args, gcloud_compute, gcloud_repos,
         email='', in_cloud_shell=False, gcloud_zone=None,
-        sdk_version='UNKNOWN', datalab_version='UNKNOWN', **kwargs):
+        sdk_version='UNKNOWN', datalab_version='UNKNOWN',
+        beta_compute=None, **kwargs):
     """Implementation of the `datalab create` subcommand.
 
     Args:
@@ -792,6 +810,7 @@ def run(args, gcloud_compute, gcloud_repos,
       gcloud_zone: The zone that gcloud is configured to use
       sdk_version: The version of the Cloud SDK being used
       datalab_version: The version of the datalab CLI being used
+      beta_compute: A function that can be used to invoke `gcloud beta compute`
     Raises:
       subprocess.CalledProcessError: If a nested `gcloud` calls fails
     """
@@ -875,6 +894,8 @@ def run(args, gcloud_compute, gcloud_repos,
                 '--service-account', service_account,
                 '--scopes', 'cloud-platform',
                 args.instance])
+            if args.no_external_ip:
+              cmd.extend(['--no-address'])
             gcloud_compute(args, cmd)
         finally:
             os.remove(startup_script_file.name)
@@ -885,5 +906,7 @@ def run(args, gcloud_compute, gcloud_repos,
             os.remove(datalab_version_file.name)
 
     if (not args.no_connect) and (not args.for_user):
-        connect.connect(args, gcloud_compute, email, in_cloud_shell)
+        if args.no_external_ip:
+            args.internal_ip = True
+        connect.connect(args, gcloud_compute, email, in_cloud_shell, beta_compute)
     return

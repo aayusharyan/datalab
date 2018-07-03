@@ -417,7 +417,9 @@ def run():
             email=get_email_address(),
             in_cloud_shell=('DEVSHELL_CLIENT_PORT' in os.environ),
             gcloud_zone=gcloud_zone,
-            sdk_version=sdk_version, datalab_version=datalab_version)
+            sdk_version=sdk_version,
+            datalab_version=datalab_version,
+            beta_compute=gcloud_beta_compute)
     except subprocess.CalledProcessError as e:
         if utils.print_debug_messages(args):
             print('A nested call to gcloud failed.')
