@@ -381,7 +381,7 @@ def run(args, gcloud_beta_compute, gcloud_repos,
                 '--scopes', 'cloud-platform',
                 args.instance])
             if args.no_external_ip:
-              cmd.extend(['--no-address'])
+                cmd.extend(['--no-address'])
             gcloud_beta_compute(args, cmd)
         finally:
             os.remove(startup_script_file.name)
@@ -394,5 +394,6 @@ def run(args, gcloud_beta_compute, gcloud_repos,
     if (not args.no_connect) and (not args.for_user):
         if args.no_external_ip:
             args.internal_ip = True
-        connect.connect(args, gcloud_beta_compute, email, in_cloud_shell, gcloud_beta_compute)
+        connect.connect(args, gcloud_beta_compute, email,
+                        in_cloud_shell, gcloud_beta_compute)
     return

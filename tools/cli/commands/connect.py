@@ -178,7 +178,8 @@ def connect(args, gcloud_compute, email, in_cloud_shell, beta_compute):
       email: The user's email address
       in_cloud_shell: Whether or not the command is being run in the
         Google Cloud Shell
-      beta_compute: A function that can be called to invoke `gcloud beta compute`
+      beta_compute: A function that can be called to invoke
+        `gcloud beta compute`
     """
     instance = args.instance
     connect_msg = ('Connecting to {0}.\n'
@@ -224,10 +225,10 @@ def connect(args, gcloud_compute, email, in_cloud_shell, beta_compute):
             '--ssh-flag=' + port_mapping])
         cmd.append('datalab@{0}'.format(instance))
         if args.internal_ip:
-          cmd.extend(['--internal-ip'])
-          beta_compute(args, cmd)
+            cmd.extend(['--internal-ip'])
+            beta_compute(args, cmd)
         else:
-          gcloud_compute(args, cmd)
+            gcloud_compute(args, cmd)
         return
 
     def maybe_open_browser(address):
